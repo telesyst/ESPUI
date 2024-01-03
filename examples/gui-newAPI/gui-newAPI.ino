@@ -18,27 +18,23 @@ const char* ssid = "ESPUI";
 const char* password = "espui";
 const char* hostname = "EspuiTest";
 
-long oldTime = 0;
-bool switchi = false;
-
+uint16_t button1;
 
 void numberCall( Control* sender, int type ) {
   Serial.println( sender->value );
 }
 
 void textCall( Control* sender, int type ) {
-  Serial.print( "Text: ID: " );
-  Serial.print( sender->id );
-  Serial.print( ", Value: " );
-  Serial.println( sender->value );
-}
+  Serial.print("Text: ID: ");
+  Serial.print(sender->id);
+  Serial.print(", Value: ");
+  Serial.println( sender->value );}
 
 void slider( Control* sender, int type ) {
-  Serial.print( "Slider: ID: " );
-  Serial.print( sender->id );
-  Serial.print( ", Value: " );
-  Serial.println( sender->value );
-}
+  Serial.print("Slider: ID: ");
+  Serial.print(sender->id);
+  Serial.print(", Value: ");
+  Serial.println( sender->value );}
 
 void buttonCallback( Control* sender, int type ) {
   switch ( type ) {
@@ -57,14 +53,21 @@ void buttonExample( Control* sender, int type ) {
     case B_DOWN:
       Serial.println( "Status: Start" );
       ESPUI.updateControl( "Status:", "Start" );
+    
+      ESPUI.getControl( button1 )->color = ControlColor::Carrot;
+      ESPUI.updateControl( button1 );
       break;
 
     case B_UP:
       Serial.println( "Status: Stop" );
       ESPUI.updateControl( "Status:", "Stop" );
+   
+      ESPUI.getControl( button1 )->color = ControlColor::Peterriver;
+      ESPUI.updateControl( button1 );
       break;
   }
 }
+
 void padExample( Control* sender, int value ) {
   switch ( value ) {
     case P_LEFT_DOWN:
@@ -125,6 +128,13 @@ void switchExample( Control* sender, int value ) {
 
   Serial.print( " " );
   Serial.println( sender->id );
+}
+
+void selectExample( Control* sender, int value ) {
+  Serial.print("Select: ID: ");
+  Serial.print(sender->id);
+  Serial.print(", Value: ");
+  Serial.println( sender->value );
 }
 
 void otherSwitchExample( Control* sender, int value ) {
@@ -191,18 +201,25 @@ void setup( void ) {
   Serial.print( "IP address: " );
   Serial.println( WiFi.getMode() == WIFI_AP ? WiFi.softAPIP() : WiFi.localIP() );
 
-  ESPUI.label( "Status:", COLOR_TURQUOISE, "Stop" );
-  ESPUI.label( "Millis:", COLOR_EMERALD, "0" );
-  ESPUI.button( "Push Button", &buttonCallback, COLOR_PETERRIVER, "Press" );
-  ESPUI.button( "Other Button", &buttonExample, COLOR_WETASPHALT, "Press" );
-  ESPUI.pad( "Pad with center", true, &padExample, COLOR_SUNFLOWER );
-  ESPUI.pad( "Pad without center", false, &padExample, COLOR_CARROT );
-  ESPUI.switcher( "Switch one", false, &switchExample, COLOR_ALIZARIN );
-  ESPUI.switcher( "Switch two", true, &otherSwitchExample, COLOR_NONE );
-  ESPUI.slider( "Slider one", &slider, COLOR_ALIZARIN, "30" );
-  ESPUI.slider( "Slider two", &slider, COLOR_NONE, "100" );
-  ESPUI.text( "Text Test:", &textCall, COLOR_ALIZARIN, "a Text Field" );
-  ESPUI.number( "Numbertest", &numberCall, COLOR_ALIZARIN, 5, 0, 10 );
+  ESPUI.addControl( ControlType::Label, "Status:", "Stop", ControlColor::Turquoise );
+
+  uint16_t select1 = ESPUI.addControl( ControlType::Select, "Select:", "", ControlColor::Alizarin, Control::noParent, &selectExample );
+  ESPUI.addControl( ControlType::Option, "Option1", "Opt1", ControlColor::Alizarin, select1 );
+  ESPUI.addControl( ControlType::Option, "Option2", "Opt2", ControlColor::Alizarin, select1 );
+  ESPUI.addControl( ControlType::Option, "Option3", "Opt3", ControlColor::Alizarin, select1 );
+  
+  ESPUI.addControl( ControlType::Text, "Text Test:", "a Text Field", ControlColor::Alizarin, Control::noParent, &textCall );
+
+  ESPUI.addControl( ControlType::Label, "Millis:", "0", ControlColor::Emerald, Control::noParent );
+  button1 = ESPUI.addControl( ControlType::Button, "Push Button", "Press", ControlColor::Peterriver, Control::noParent, &buttonCallback );
+  ESPUI.addControl( ControlType::Button, "Other Button", "Press", ControlColor::Wetasphalt, Control::noParent, &buttonExample );
+  ESPUI.addControl( ControlType::PadWithCenter, "Pad with center", "", ControlColor::Sunflower, Control::noParent, &padExample );
+  ESPUI.addControl( ControlType::Pad, "Pad without center", "", ControlColor::Carrot, Control::noParent, &padExample );
+  ESPUI.addControl( ControlType::Switcher, "Switch one", "", ControlColor::Alizarin, Control::noParent, &switchExample );
+  ESPUI.addControl( ControlType::Switcher, "Switch two", "", ControlColor::None, Control::noParent, &otherSwitchExample );
+  ESPUI.addControl( ControlType::Slider, "Slider one", "30", ControlColor::Alizarin, Control::noParent, &slider );
+  ESPUI.addControl( ControlType::Slider, "Slider two", "100", ControlColor::Alizarin, Control::noParent, &slider );
+  ESPUI.addControl( ControlType::Number, "Number:", "50", ControlColor::Alizarin, Control::noParent, &numberCall );
 
   /*
    * .begin loads and serves all files from PROGMEM directly.
@@ -214,7 +231,7 @@ void setup( void ) {
    * Optionally you can use HTTP BasicAuth. Keep in mind that this is NOT a
    * SECURE way of limiting access.
    * Anyone who is able to sniff traffic will be able to intercept your password
-   * since it is transmitted in cleartext. Just add a string as username and password,
+   * since it is transmitted in cleartext. Just add a username and password,
    * for example begin("ESPUI Control", "username", "password")
    */
   ESPUI.begin( "ESPUI Control" );
@@ -223,10 +240,15 @@ void setup( void ) {
 void loop( void ) {
   dnsServer.processNextRequest();
 
+  static long oldTime = 0;
+  static bool switchi = false;
+
   if ( millis() - oldTime > 5000 ) {
-    ESPUI.print( "Millis:", String( millis() ) );
+    ESPUI.updateControl( "Millis:", String( millis() ) );
     switchi = !switchi;
-    ESPUI.updateSwitcher( "Switch one", switchi );
+    ESPUI.updateControl( "Switch one", switchi ? "1" : "0" );
     oldTime = millis();
   }
 }
+
+

@@ -1,6 +1,6 @@
 {
   "name": "ESPUI",
-  "keywords": "espressif web interface iot easy ui",
+  "keywords": "espressif web interface iot control simple easy ui userinterface",
   "description": "ESP32 and ESP8266 Web Interface Library",
   "repository": {
     "type": "git",
@@ -24,14 +24,9 @@
       "name": "ArduinoJson",
       "authors": "Benoit Blanchon",
       "frameworks": "arduino"
-    },
-    {
-      "name": "LittleFS_esp32",
-      "authors": "lorol",
-      "frameworks": "arduino"
     }
   ],
-  "version": "2.2.3",
+  "version": "3.0.0",
   "frameworks": "arduino",
   "platforms": "*"
 }

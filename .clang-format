@@ -1,58 +1,53 @@
----
-# Based on Webkit style
-BasedOnStyle: Webkit
-IndentWidth: 4
-ColumnLimit: 120
----
+﻿---
+AlignAfterOpenBracket: Align
+AlignConsecutiveMacros: 'true'
+AlignConsecutiveAssignments: 'true'
+AlignConsecutiveDeclarations: 'true'
+AlignEscapedNewlines: Left
+AlignOperands: 'true'
+AlwaysBreakAfterReturnType: TopLevelDefinitions
+AlwaysBreakBeforeMultilineStrings: 'false'
+AlwaysBreakTemplateDeclarations: 'Yes'
+BinPackArguments: 'false'
+BinPackParameters: 'false'
+BreakBeforeBraces: Attach
+BreakBeforeTernaryOperators: 'false'
+BreakConstructorInitializers: BeforeComma
+BreakInheritanceList: BeforeComma
+BreakStringLiterals: 'false'
+CompactNamespaces: 'false'
+ContinuationIndentWidth: '2'
+Cpp11BracedListStyle: 'false'
+DerivePointerAlignment: 'false'
+DisableFormat: 'false'
+FixNamespaceComments: 'false'
+IndentCaseLabels: 'true'
+IndentPPDirectives: BeforeHash
+IndentWidth: '2'
+IndentWrappedFunctionNames: 'false'
+KeepEmptyLinesAtTheStartOfBlocks: 'true'
 Language: Cpp
-Standard: Cpp11
-# Pointers aligned to the left
-DerivePointerAlignment: false
-PointerAlignment: Left
-AccessModifierOffset: -4
-AllowShortFunctionsOnASingleLine: Inline
-AlwaysBreakTemplateDeclarations: true
-BreakBeforeBraces: Custom
-BraceWrapping:
-    AfterClass: true
-    AfterControlStatement: true
-    AfterEnum: true
-    AfterFunction: true
-    AfterNamespace: true
-    AfterStruct: true
-    AfterUnion: true
-    AfterExternBlock: true
-    BeforeCatch: true
-    BeforeElse: true
-    SplitEmptyFunction: false
-    SplitEmptyRecord: false
-    SplitEmptyNamespace: false
-BreakConstructorInitializers: BeforeColon
-CompactNamespaces: false
-ConstructorInitializerAllOnOneLineOrOnePerLine: true
-ConstructorInitializerIndentWidth: 4
-Cpp11BracedListStyle: true
-FixNamespaceComments: true
-IncludeBlocks: Regroup
-IncludeCategories:
-    # C++ standard headers (no .h)
-    - Regex: '<[[:alnum:]_-]+>'
-      Priority: 1
-    # Extenal libraries (with .h)
-    - Regex: '<[[:alnum:]_./-]+>'
-      Priority: 2
-    # Headers from same folder
-    - Regex: '"[[:alnum:]_.-]+"'
-      Priority: 3
-    # Headers from other folders
-    - Regex: '"[[:alnum:]_/.-]+"'
-      Priority: 4
-IndentCaseLabels: false
+MaxEmptyLinesToKeep: '1'
 NamespaceIndentation: All
-SortIncludes: true
-SortUsingDeclarations: true
-SpaceAfterTemplateKeyword: true
-SpacesInAngles: false
-SpacesInParentheses: false
-SpacesInSquareBrackets: false
+PointerAlignment: Left
+SortUsingDeclarations: 'true'
+SpaceAfterCStyleCast: 'false'
+SpaceAfterLogicalNot: 'false'
+SpaceAfterTemplateKeyword: 'false'
+SpaceBeforeAssignmentOperators: 'true'
+SpaceBeforeCpp11BracedList: 'false'
+SpaceBeforeCtorInitializerColon: 'true'
+SpaceBeforeInheritanceColon: 'true'
+SpaceBeforeParens: Never
+SpaceBeforeRangeBasedForLoopColon: 'false'
+SpaceInEmptyParentheses: 'false'
+SpacesInAngles: 'true'
+SpacesInCStyleCastParentheses: 'true'
+SpacesInContainerLiterals: 'true'
+SpacesInParentheses: 'true'
+SpacesInSquareBrackets: 'true'
+Standard: Cpp11
+TabWidth: '2'
 UseTab: Never
+
+...

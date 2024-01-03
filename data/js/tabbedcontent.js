@@ -5,28 +5,28 @@
  * @license   MIT
  * @author    Òscar Casajuana Alonso <elboletaire at underave dot net>
 */
-;(function($, document, window, undefined) {
+; (function ($, document, window, undefined) {
   "use strict";
 
-  var Tabbedcontent = function(tabcontent, options) {
+  var Tabbedcontent = function (tabcontent, options) {
     var defaults = {
-        links         : tabcontent.prev().find('a').length ? tabcontent.prev().find('a') : '.tabs a', // the tabs itself. By default it selects the links contained in the previous wrapper or the links inside ".tabs a" if there's no previous item
-        errorSelector : '.error-message', // false to disable
-        speed         : false, // speed of the show effect. Set to null or false to disable
-        onSwitch      : false, // onSwitch callback
-        onInit        : false, // onInit callback
-        currentClass  : 'active', // current selected tab class (is set to the <a> element)
-        tabErrorClass : 'has-errors', // a class to be added to the tab where errorSelector is detected
-        history       : true, // set to false to disable HTML5 history
-        historyOnInit : true, // allows to deactivate the history for the intial autmatically tab switch on load
-        loop          : false // if set to true will loop between tabs when using the next() and prev() api methods
-      },
+      links: tabcontent.prev().find('a').length ? tabcontent.prev().find('a') : '.tabs a', // the tabs itself. By default it selects the links contained in the previous wrapper or the links inside ".tabs a" if there's no previous item
+      errorSelector: '.error-message', // false to disable
+      speed: false, // speed of the show effect. Set to null or false to disable
+      onSwitch: false, // onSwitch callback
+      onInit: false, // onInit callback
+      currentClass: 'active', // current selected tab class (is set to the <a> element)
+      tabErrorClass: 'has-errors', // a class to be added to the tab where errorSelector is detected
+      history: true, // set to false to disable HTML5 history
+      historyOnInit: true, // allows to deactivate the history for the intial autmatically tab switch on load
+      loop: false // if set to true will loop between tabs when using the next() and prev() api methods
+    },
       firstTime = false,
-      children  = tabcontent.children(),
-      history   = window.history,
-      loc       = document.location,
-      current   = null
-    ;
+      children = tabcontent.children(),
+      history = window.history,
+      loc = document.location,
+      current = null
+      ;
 
     options = $.extend(defaults, options);
 
@@ -91,28 +91,28 @@
     function getTab(tab) {
       if (tab instanceof $) {
         return {
-          tab : tab,
-          link : options.links.eq(tab.index())
+          tab: tab,
+          link: options.links.eq(tab.index())
         };
       }
       if (isInt(tab)) {
         return {
-          tab : children.eq(tab),
-          link : options.links.eq(tab)
+          tab: children.eq(tab),
+          link: options.links.eq(tab)
         };
       }
       if (children.filter(tab).length) {
         return {
-          tab : children.filter(tab),
-          link : options.links.filter(function() {
+          tab: children.filter(tab),
+          link: options.links.filter(function () {
             return filterTab.apply(this, [tab]);
           })
         };
       }
       // assume it's an id without #
       return {
-        tab : children.filter('#' + tab),
-        link : options.links.filter(function() {
+        tab: children.filter('#' + tab),
+        link: options.links.filter(function () {
           return filterTab.apply(this, ['#' + tab]);
         })
       };
@@ -172,7 +172,7 @@
     function onSwitch(tab) {
       if (options.history && options.historyOnInit && firstTime && history !== undefined && ('pushState' in history)) {
         firstTime = false;
-        window.setTimeout(function() {
+        window.setTimeout(function () {
           history.replaceState(null, '', tab);
         }, 100);
       }
@@ -199,10 +199,10 @@
       }
 
       // Toggle active class
-      options.links.attr('aria-selected','false').parent().removeClass(options.currentClass);
-      options.links.filter(function() {
+      options.links.attr('aria-selected', 'false').parent().removeClass(options.currentClass);
+      options.links.filter(function () {
         return filterTab.apply(this, [tab]);
-      }).attr('aria-selected','true').parent().addClass(options.currentClass);
+      }).attr('aria-selected', 'true').parent().addClass(options.currentClass);
       // Hide tabs
       children.hide();
 
@@ -217,11 +217,11 @@
       }
 
       // Show tabs
-      children.attr('aria-hidden','true').filter(tab).show(options.speed, function() {
+      children.attr('aria-hidden', 'true').filter(tab).show(options.speed, function () {
         if (options.speed) {
           onSwitch(tab);
         }
-      }).attr('aria-hidden','false');
+      }).attr('aria-hidden', 'false');
       if (!options.speed) {
         onSwitch(tab);
       }
@@ -274,7 +274,7 @@
       // Switch to tab containing class options.errorSelector
       else if (options.errorSelector && children.find(options.errorSelector).length) {
         // Search for errors and show first tab containing one
-        children.each(function() {
+        children.each(function () {
           if ($(this).find(options.errorSelector).length) {
             switchTab("#" + $(this).attr("id"));
             return false;
@@ -287,7 +287,7 @@
       }
       // Add a class to every tab containing errors
       if (options.errorSelector) {
-        children.find(options.errorSelector).each(function() {
+        children.find(options.errorSelector).each(function () {
           var tab = getTab($(this).parent());
           tab.link.parent().addClass(options.tabErrorClass);
         });
@@ -298,7 +298,7 @@
         $(window).bind('hashchange', hashSwitch);
       } else { // old browsers
         var current_href = loc.href;
-        window.setInterval(function() {
+        window.setInterval(function () {
           if (current_href !== loc.href) {
             hashSwitch.call(window.event);
             current_href = loc.href;
@@ -307,7 +307,7 @@
       }
       // Bind click event on links, to ensure we don't rewrite the URI in
       // case history is disabled
-      $(options.links).on('click', function(e) {
+      $(options.links).on('click', function (e) {
         switchTab($(this).attr('href').replace(/^[^#]+/, ''), options.history);
         e.preventDefault();
       });
@@ -325,14 +325,14 @@
      */
     function api() {
       return {
-        'switch'       : apiSwitch,
-        'switchTab'    : apiSwitch, // for old browsers
-        'getCurrent'   : getCurrent,
-        'getTab'       : getTab,
-        'next'         : next,
-        'prev'         : prev,
-        'isFirst'      : isFirst,
-        'isLast'       : isLast
+        'switch': apiSwitch,
+        'switchTab': apiSwitch, // for old browsers
+        'getCurrent': getCurrent,
+        'getTab': getTab,
+        'next': next,
+        'prev': prev,
+        'isFirst': isFirst,
+        'isLast': isLast
       };
     }
 
@@ -341,8 +341,8 @@
     return api();
   };
 
-  $.fn.tabbedContent = function(options) {
-    return this.each(function() {
+  $.fn.tabbedContent = function (options) {
+    return this.each(function () {
       var tabs = new Tabbedcontent($(this), options);
       $(this).data('api', tabs);
     });
