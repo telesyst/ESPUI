@@ -41,9 +41,7 @@
 
 #else
 
-#include <ArduinoOTA.h>
 #include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
 #include <ESPAsyncTCP.h>
 #include <Hash.h>
 
@@ -121,6 +119,13 @@ public:
     bool auto_update_values = false;
 
     void setVerbosity(Verbosity verbosity);
+	
+	typedef std::function<void(AsyncWebServer*)> onCreateServerCallback_t;
+	void onCreateServerCallbackSet(onCreateServerCallback_t callback)
+	{
+        onCreateServerCallback = callback;
+	}
+	
     void begin(const char* _title, const char* username = nullptr, const char* password = nullptr,
         uint16_t port = 80); // Setup server and page in Memorymode
     void beginSPIFFS(const char* _title, const char* username = nullptr, const char* password = nullptr,
@@ -273,7 +278,9 @@ protected:
 
     AsyncWebServer* server;
     AsyncWebSocket* ws;
-
+	
+	
+	onCreateServerCallback_t onCreateServerCallback = nullptr;
     const char* basicAuthUsername = nullptr;
     const char* basicAuthPassword = nullptr;
     bool basicAuth = true;

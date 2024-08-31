@@ -1276,6 +1276,10 @@ void ESPUIClass::begin(const char* _title, const char* username, const char* pas
         }
         yield();
     });
+	
+	if (onCreateServerCallback) {
+        onCreateServerCallback(server);
+    }
 
     server->begin();
 
