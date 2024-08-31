@@ -520,7 +520,16 @@ uint16_t ESPUIClass::addControl(
     Control * ctrl = new Control(type, label, nullptr, value, color, true, parentControl);
     if (auto_update_values && ctrl)
         ctrl->auto_update_value = true;
-    return addControl(type, label, value, color, parentControl, ctrl);
+    return addControl(ctrl);
+}
+
+uint16_t ESPUIClass::addControl(
+    ControlType type, const __FlashStringHelper* label, const String& value, ControlColor color, uint16_t parentControl)
+{
+    Control* ctrl = new Control(type, label, nullptr, value, color, true, parentControl);
+    if (auto_update_values && ctrl)
+        ctrl->auto_update_value = true;
+    return addControl(ctrl);
 }
 
 uint16_t ESPUIClass::addControl(ControlType type, const char* label, const String& value, ControlColor color,
@@ -532,8 +541,16 @@ uint16_t ESPUIClass::addControl(ControlType type, const char* label, const Strin
     return id;
 }
 
-uint16_t ESPUIClass::addControl(
-    ControlType type, const char* label, const String& value, ControlColor color, uint16_t parentControl, Control* control)
+uint16_t ESPUIClass::addControl(ControlType type, const __FlashStringHelper* label, const String& value, ControlColor color,
+    uint16_t parentControl, std::function<void(Control*, int)> callback)
+{
+    uint16_t id = addControl(type, label, value, color, parentControl);
+    // set the original style callback
+    getControl(id)->callback = callback;
+    return id;
+}
+
+uint16_t ESPUIClass::addControl(Control* control)
 {
 #ifdef ESP32
     xSemaphoreTake(ControlsSemaphore, portMAX_DELAY);
@@ -656,6 +673,10 @@ uint16_t ESPUIClass::slider(
 uint16_t ESPUIClass::button(const char* label, std::function<void(Control*, int)> callback, ControlColor color, const String& value)
 {
     return addControl(ControlType::Button, label, value, color, Control::noParent, callback);
+}
+
+uint16_t ESPUIClass::button(const __FlashStringHelper* label, const __FlashStringHelper* text, std::function<void(Control*, int)> callback, uint16_t parentControl, ControlColor color){
+    return addControl(ControlType::Button, label, text, color, parentControl, callback);
 }
 
 uint16_t ESPUIClass::switcher(const char* label, std::function<void(Control*, int)> callback, ControlColor color, bool startState)
@@ -892,6 +913,23 @@ void ESPUIClass::updateControlLabel(Control* control, const char* value, int cli
     }
     control->label_r = value;
     control->lablel_is_in_flash = false;
+    updateControl(control, clientId);
+}
+
+void ESPUIClass::updateControlLabel(Control* control, const __FlashStringHelper* value, int clientId)
+{
+    if (!control)
+    {
+#if defined(DEBUG_ESPUI)
+        if (verbosity)
+        {
+            ESPU_DBGf_P(PSTR("Error: updateControlLabel Control: There is no control with the requested ID \n"));
+        }
+#endif
+        return;
+    }
+    control->label_f = value;
+    control->lablel_is_in_flash = 1;
     updateControl(control, clientId);
 }
 
