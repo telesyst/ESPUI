@@ -11,7 +11,7 @@ Control::Control(ControlType type, const char* label, std::function<void(Control
       color(color),
       next(nullptr),
       type(type),
-      options(visible ? CTRL_OPT_VISIBLE:0),
+      options( CTRL_OPT_ENABLED | (visible ? CTRL_OPT_VISIBLE:0)),
       parentControl(parentControl), 
       ControlChangeID(1)
 {
@@ -26,7 +26,7 @@ Control::Control(ControlType type, const __FlashStringHelper* label, std::functi
       color(color),
       next(nullptr),
       type(type),
-      options(CTRL_OPT_ENABLED | CTRL_OPT_LABEL_IN_FLASH),
+      options(CTRL_OPT_ENABLED | CTRL_OPT_LABEL_IN_FLASH | (visible ? CTRL_OPT_VISIBLE:0)),
       parentControl(parentControl),
       ControlChangeID(1)
 {

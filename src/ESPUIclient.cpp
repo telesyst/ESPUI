@@ -2,7 +2,7 @@
 #include "ESPUIclient.h"
 #include "ESPUIcontrol.h"
 
-#if defined(DEBUG) && defined(ESPU_DEBUG)
+#if defined(_DEBUG) && defined(DEBUG_ESPUI)
     #define ESPU_DBG(arg)        Serial.print(arg)
 	#define ESPU_DBGL(arg)       Serial.println(arg)
 #else

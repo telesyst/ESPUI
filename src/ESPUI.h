@@ -325,7 +325,7 @@ protected:
     void NotifyClients(ClientUpdateType_t newState);
     void NotifyClient(uint32_t WsClientId, ClientUpdateType_t newState);
 
-    bool SendJsonDocToWebSocket(ArduinoJson::DynamicJsonDocument& document, int clientId);
+    bool SendJsonDocToWebSocket(ArduinoJson::JsonDocument& document, int clientId);
     std::map<uint32_t, ESPUIclient*> MapOfClients;
 
     uint32_t    ControlChangeID = 0;
