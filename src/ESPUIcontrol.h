@@ -63,6 +63,7 @@ public:
     bool wide;
     bool vertical;
     bool enabled;
+    bool auto_update_value;
     uint16_t parentControl;
     String panelStyle;
     String elementStyle;

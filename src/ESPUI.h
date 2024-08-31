@@ -118,6 +118,7 @@ public:
     bool sliderContinuous = false;
     void onWsEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len);
 	bool captivePortal = true;
+    bool auto_update_values = false;
 
     void setVerbosity(Verbosity verbosity);
     void begin(const char* _title, const char* username = nullptr, const char* password = nullptr,
@@ -284,8 +285,7 @@ protected:
     void NotifyClients(ClientUpdateType_t newState);
     void NotifyClient(uint32_t WsClientId, ClientUpdateType_t newState);
 
-    bool SendJsonDocToWebSocket(ArduinoJson::JsonDocument& document, uint16_t clientId);
-
+    bool SendJsonDocToWebSocket(ArduinoJson::DynamicJsonDocument& document, int clientId);
     std::map<uint32_t, ESPUIclient*> MapOfClients;
 
     uint32_t    ControlChangeID = 0;

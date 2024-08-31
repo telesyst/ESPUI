@@ -488,7 +488,10 @@ uint16_t ESPUIClass::addControl(ControlType type, const char* label, const Strin
 uint16_t ESPUIClass::addControl(
     ControlType type, const char* label, const String& value, ControlColor color, uint16_t parentControl)
 {
-    return addControl(type, label, value, color, parentControl, new Control(type, label, nullptr, value, color, true, parentControl));
+    Control * ctrl = new Control(type, label, nullptr, value, color, true, parentControl);
+    if (auto_update_values && ctrl)
+        ctrl->auto_update_value = true;
+    return addControl(type, label, value, color, parentControl, ctrl);
 }
 
 uint16_t ESPUIClass::addControl(ControlType type, const char* label, const String& value, ControlColor color,
@@ -966,7 +969,8 @@ void ESPUIClass::addGraphPoint(uint16_t id, int nValue, int clientId)
     } while (false);
 }
 
-bool ESPUIClass::SendJsonDocToWebSocket(ArduinoJson::JsonDocument& document, uint16_t clientId)
+
+bool ESPUIClass::SendJsonDocToWebSocket(ArduinoJson::DynamicJsonDocument& document, int clientId)
 {
     bool Response = false;
 
@@ -1151,7 +1155,7 @@ void ESPUIClass::begin(const char* _title, const char* username, const char* pas
             return request->requestAuthentication();
         }
 
-        AsyncWebServerResponse* response = request->beginResponse_P(200, "text/html", HTML_INDEX);
+        AsyncWebServerResponse* response = request->beginResponse(200, "text/html", HTML_INDEX);
         request->send(response);
     });
 
@@ -1164,7 +1168,7 @@ void ESPUIClass::begin(const char* _title, const char* username, const char* pas
         }
 
         AsyncWebServerResponse* response
-            = request->beginResponse_P(200, "application/javascript", JS_ZEPTO_GZIP, sizeof(JS_ZEPTO_GZIP));
+            = request->beginResponse(200, "application/javascript", JS_ZEPTO_GZIP, sizeof(JS_ZEPTO_GZIP));
         response->addHeader("Content-Encoding", "gzip");
         request->send(response);
     });
@@ -1176,7 +1180,7 @@ void ESPUIClass::begin(const char* _title, const char* username, const char* pas
         }
 
         AsyncWebServerResponse* response
-            = request->beginResponse_P(200, "application/javascript", JS_CONTROLS_GZIP, sizeof(JS_CONTROLS_GZIP));
+            = request->beginResponse(200, "application/javascript", JS_CONTROLS_GZIP, sizeof(JS_CONTROLS_GZIP));
         response->addHeader("Content-Encoding", "gzip");
         request->send(response);
     });
@@ -1188,7 +1192,7 @@ void ESPUIClass::begin(const char* _title, const char* username, const char* pas
         }
 
         AsyncWebServerResponse* response
-            = request->beginResponse_P(200, "application/javascript", JS_SLIDER_GZIP, sizeof(JS_SLIDER_GZIP));
+            = request->beginResponse(200, "application/javascript", JS_SLIDER_GZIP, sizeof(JS_SLIDER_GZIP));
         response->addHeader("Content-Encoding", "gzip");
         request->send(response);
     });
@@ -1200,7 +1204,7 @@ void ESPUIClass::begin(const char* _title, const char* username, const char* pas
         }
 
         AsyncWebServerResponse* response
-            = request->beginResponse_P(200, "application/javascript", JS_GRAPH_GZIP, sizeof(JS_GRAPH_GZIP));
+            = request->beginResponse(200, "application/javascript", JS_GRAPH_GZIP, sizeof(JS_GRAPH_GZIP));
         response->addHeader("Content-Encoding", "gzip");
         request->send(response);
     });
@@ -1211,7 +1215,7 @@ void ESPUIClass::begin(const char* _title, const char* username, const char* pas
             return request->requestAuthentication();
         }
 
-        AsyncWebServerResponse* response = request->beginResponse_P(
+        AsyncWebServerResponse* response = request->beginResponse(
             200, "application/javascript", JS_TABBEDCONTENT_GZIP, sizeof(JS_TABBEDCONTENT_GZIP));
         response->addHeader("Content-Encoding", "gzip");
         request->send(response);
@@ -1226,7 +1230,7 @@ void ESPUIClass::begin(const char* _title, const char* username, const char* pas
         }
 
         AsyncWebServerResponse* response
-            = request->beginResponse_P(200, "text/css", CSS_STYLE_GZIP, sizeof(CSS_STYLE_GZIP));
+            = request->beginResponse(200, "text/css", CSS_STYLE_GZIP, sizeof(CSS_STYLE_GZIP));
         response->addHeader("Content-Encoding", "gzip");
         request->send(response);
     });
@@ -1238,7 +1242,7 @@ void ESPUIClass::begin(const char* _title, const char* username, const char* pas
         }
 
         AsyncWebServerResponse* response
-            = request->beginResponse_P(200, "text/css", CSS_NORMALIZE_GZIP, sizeof(CSS_NORMALIZE_GZIP));
+            = request->beginResponse(200, "text/css", CSS_NORMALIZE_GZIP, sizeof(CSS_NORMALIZE_GZIP));
         response->addHeader("Content-Encoding", "gzip");
         request->send(response);
     });
