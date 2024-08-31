@@ -5,7 +5,11 @@
 #include <ESPAsyncWebServer.h>
 
 #include "dataControlsJS.h"
+
+#ifndef ESPU_DISABLE_GRAPH
 #include "dataGraphJS.h"
+#endif
+
 #include "dataIndexHTML.h"
 #include "dataNormalizeCSS.h"
 #include "dataSliderJS.h"
@@ -15,6 +19,14 @@
 
 #if ESP8266
 #include <umm_malloc/umm_heap_select.h>
+#endif
+
+#if defined(DEBUG) && defined(ESPU_DEBUG)
+    #define ESPU_DBG(arg)        Serial.print(arg)
+	#define ESPU_DBGL(arg)       Serial.println(arg)
+#else
+	#define ESPU_DBG(arg)
+    #define ESPU_DBGL(arg)
 #endif
 
 static String heapInfo(const __FlashStringHelper* mode)
@@ -72,7 +84,7 @@ void listDir(const char* dirname, uint8_t levels)
 #if defined(DEBUG_ESPUI)
     if (ESPUI.verbosity)
     {
-        Serial.printf_P(PSTR("Listing directory: %s\n"), dirname);
+        ESPU_DBGf_P(PSTR("Listing directory: %s\n"), dirname);
     }
 #endif
 
@@ -82,7 +94,7 @@ void listDir(const char* dirname, uint8_t levels)
 #if defined(DEBUG_ESPUI)
         if (ESPUI.verbosity)
         {
-            Serial.println(F("Failed to open directory"));
+            ESPU_DBGL(F("Failed to open directory"));
         }
 #endif
 
@@ -94,7 +106,7 @@ void listDir(const char* dirname, uint8_t levels)
 #if defined(DEBUG_ESPUI)
         if (ESPUI.verbosity)
         {
-            Serial.println(F("Not a directory"));
+            ESPU_DBGL(F("Not a directory"));
         }
 #endif
 
@@ -110,8 +122,8 @@ void listDir(const char* dirname, uint8_t levels)
 #if defined(DEBUG_ESPUI)
             if (ESPUI.verbosity)
             {
-                Serial.print(F("  DIR : "));
-                Serial.println(file.name());
+                ESPU_DBG(F("  DIR : "));
+                ESPU_DBGL(file.name());
             }
 #endif
 
@@ -129,10 +141,10 @@ void listDir(const char* dirname, uint8_t levels)
 #if defined(DEBUG_ESPUI)
             if (ESPUI.verbosity)
             {
-                Serial.print(F("  FILE: "));
-                Serial.print(file.name());
-                Serial.print(F("  SIZE: "));
-                Serial.println(file.size());
+                ESPU_DBG(F("  FILE: "));
+                ESPU_DBG(file.name());
+                ESPU_DBG(F("  SIZE: "));
+                ESPU_DBGL(file.size());
             }
 #endif
         }
@@ -147,7 +159,7 @@ void listDir(const char* dirname, uint8_t levels)
 #if defined(DEBUG_ESPUI)
     if (ESPUI.verbosity)
     {
-        Serial.printf_P(PSTR("Listing directory: %s\n"), dirname);
+        ESPU_DBGf_P(PSTR("Listing directory: %s\n"), dirname);
     }
 #endif
 
@@ -160,8 +172,8 @@ void listDir(const char* dirname, uint8_t levels)
 #if defined(DEBUG_ESPUI)
             if (ESPUI.verbosity)
             {
-                Serial.print(F("  DIR : "));
-                Serial.println(dir.fileName());
+                ESPU_DBG(F("  DIR : "));
+                ESPU_DBGL(dir.fileName());
             }
 #endif
             if (levels)
@@ -176,10 +188,10 @@ void listDir(const char* dirname, uint8_t levels)
 #if defined(DEBUG_ESPUI)
             if (ESPUI.verbosity)
             {
-                Serial.print(F("  FILE: "));
-                Serial.print(dir.fileName());
-                Serial.print(F("  SIZE: "));
-                Serial.println(dir.fileSize());
+                ESPU_DBG(F("  FILE: "));
+                ESPU_DBG(dir.fileName());
+                ESPU_DBG(F("  SIZE: "));
+                ESPU_DBGL(dir.fileSize());
             }
 #endif
         }
@@ -192,25 +204,25 @@ void ESPUIClass::list()
 {
     if (!EspuiLittleFS.begin())
     {
-        Serial.println(F("Espui LittleFS Mount Failed"));
+        ESPU_DBGL(F("Espui LittleFS Mount Failed"));
         return;
     }
 
     listDir("/", 1);
 
 #if defined(ESP32)
-    Serial.print(F("Total KB: "));
-    Serial.println(EspuiLittleFS.totalBytes() / 1024);
-    Serial.print(F("Used KB: "));
-    Serial.println(EspuiLittleFS.usedBytes() / 1024);
+    ESPU_DBG(F("Total KB: "));
+    ESPU_DBGL(EspuiLittleFS.totalBytes() / 1024);
+    ESPU_DBG(F("Used KB: "));
+    ESPU_DBGL(EspuiLittleFS.usedBytes() / 1024);
 #else
     FSInfo fs_info;
     EspuiLittleFS.info(fs_info);
 
-    Serial.print(F("Total KB: "));
-    Serial.println(fs_info.totalBytes / 1024);
-    Serial.print(F("Used KB: "));
-    Serial.println(fs_info.usedBytes / 1024);
+    ESPU_DBG(F("Total KB: "));
+    ESPU_DBGL(fs_info.totalBytes / 1024);
+    ESPU_DBG(F("Used KB: "));
+    ESPU_DBGL(fs_info.usedBytes / 1024);
 #endif // !defined(ESP32)
 }
 
@@ -222,7 +234,7 @@ void deleteFile(const char* path)
 #if defined(DEBUG_ESPUI)
         if (ESPUI.verbosity)
         {
-            Serial.printf_P(PSTR("File: %s does not exist, not deleting\n"), path);
+            ESPU_DBGf_P(PSTR("File: %s does not exist, not deleting\n"), path);
         }
 #endif
 
@@ -232,7 +244,7 @@ void deleteFile(const char* path)
 #if defined(DEBUG_ESPUI)
     if (ESPUI.verbosity)
     {
-        Serial.printf_P(PSTR("Deleting file: %s\n"), path);
+        ESPU_DBGf_P(PSTR("Deleting file: %s\n"), path);
     }
 #endif
 
@@ -242,7 +254,7 @@ void deleteFile(const char* path)
 #if defined(DEBUG_ESPUI)
         if (ESPUI.verbosity)
         {
-            Serial.println(F("File deleted"));
+            ESPU_DBGL(F("File deleted"));
         }
 #endif
     }
@@ -251,7 +263,7 @@ void deleteFile(const char* path)
 #if defined(DEBUG_ESPUI)
         if (ESPUI.verbosity)
         {
-            Serial.println(F("Delete failed"));
+            ESPU_DBGL(F("Delete failed"));
         }
 #endif
     }
@@ -262,7 +274,7 @@ void ESPUIClass::writeFile(const char* path, const char* data)
 #if defined(DEBUG_ESPUI)
     if (ESPUI.verbosity)
     {
-        Serial.printf_P(PSTR("Writing file: %s\n"), path);
+        ESPU_DBGf_P(PSTR("Writing file: %s\n"), path);
     }
 #endif
 
@@ -272,7 +284,7 @@ void ESPUIClass::writeFile(const char* path, const char* data)
 #if defined(DEBUG_ESPUI)
         if (ESPUI.verbosity)
         {
-            Serial.println(F("Failed to open file for writing"));
+            ESPU_DBGL(F("Failed to open file for writing"));
         }
 #endif
 
@@ -281,6 +293,23 @@ void ESPUIClass::writeFile(const char* path, const char* data)
 
 #if defined(ESP32)
     if (file.print(data))
+    {
+#if defined(DEBUG_ESPUI)
+        if (ESPUI.verbosity)
+        {
+            ESPU_DBGL(F("File written"));
+        }
+#endif
+    }
+    else
+    {
+#if defined(DEBUG_ESPUI)
+        if (ESPUI.verbosity)
+        {
+            ESPU_DBGL(F("Write failed"));
+        }
+#endif
+    }
 #else
     if (file.print(FPSTR(data)))
 #endif // !defined(ESP32)
@@ -289,14 +318,14 @@ void ESPUIClass::writeFile(const char* path, const char* data)
 #if defined(DEBUG_ESPUI)
         if (ESPUI.verbosity)
         {
-            Serial.println(F("File written"));
+            ESPU_DBGL(F("File written"));
         }
     }
     else
     {
         if (ESPUI.verbosity)
         {
-            Serial.println(F("Write failed"));
+            ESPU_DBGL(F("Write failed"));
         }
 #endif
     }
@@ -304,7 +333,6 @@ void ESPUIClass::writeFile(const char* path, const char* data)
 }
 
 // end LITTLEFS functions
-
 void ESPUIClass::prepareFileSystem(bool format)
 {
     // this function should only be used once
@@ -312,7 +340,7 @@ void ESPUIClass::prepareFileSystem(bool format)
 #if defined(DEBUG_ESPUI)
     if (verbosity)
     {
-        Serial.println(F("About to prepare filesystem..."));
+        ESPU_DBGL(F("About to prepare filesystem..."));
     }
 #endif
 
@@ -331,7 +359,7 @@ void ESPUIClass::prepareFileSystem(bool format)
 #if defined(DEBUG_ESPUI)
             if (verbosity)
             {
-                Serial.println(F("LittleFS Format Failed"));
+                ESPU_DBGL(F("LittleFS Format Failed"));
             }
 #endif
             return;
@@ -344,7 +372,7 @@ void ESPUIClass::prepareFileSystem(bool format)
 #if defined(DEBUG_ESPUI)
         if (verbosity)
         {
-            Serial.println(F("LittleFS Formatted"));
+            ESPU_DBGL(F("LittleFS Formatted"));
         }
 #endif
     }
@@ -353,7 +381,7 @@ void ESPUIClass::prepareFileSystem(bool format)
     if (verbosity)
     {
         listDir("/", 1);
-        Serial.println(F("LittleFS Mount ESP32 Done"));
+        ESPU_DBGL(F("LittleFS Mount ESP32 Done"));
     }
 #endif
 
@@ -371,7 +399,7 @@ void ESPUIClass::prepareFileSystem(bool format)
 #if defined(DEBUG_ESPUI)
     if (verbosity)
     {
-        Serial.println(F("Cleanup done"));
+        ESPU_DBGL(F("Cleanup done"));
     }
 #endif
 
@@ -406,7 +434,7 @@ void ESPUIClass::prepareFileSystem(bool format)
 #if defined(DEBUG_ESPUI)
     if (verbosity)
     {
-        Serial.println(F("Done Initializing filesystem :-)"));
+        ESPU_DBGL(F("Done Initializing filesystem :-)"));
     }
 #endif
 
@@ -424,11 +452,12 @@ void ESPUIClass::prepareFileSystem(bool format)
     EspuiLittleFS.end();
 }
 
+
 // Handle Websockets Communication
 void ESPUIClass::onWsEvent(
     AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len)
 {
-    // Serial.println(String("ESPUIClass::OnWsEvent: type: ") + String(type));
+    // ESPU_DBGL(String("ESPUIClass::OnWsEvent: type: ") + String(type));
     RemoveToBeDeletedControls();
 
     if (WS_EVT_DISCONNECT == type)
@@ -436,13 +465,13 @@ void ESPUIClass::onWsEvent(
 #if defined(DEBUG_ESPUI)
         if (verbosity)
         {
-            Serial.println(F("WS_EVT_DISCONNECT"));
+            ESPU_DBGL(F("WS_EVT_DISCONNECT"));
         }
 #endif
 
         if (MapOfClients.end() != MapOfClients.find(client->id()))
         {
-            // Serial.println("Delete client.");
+            // ESPU_DBGL("Delete client.");
             delete MapOfClients[client->id()];
             MapOfClients.erase(client->id());
         }
@@ -456,13 +485,13 @@ void ESPUIClass::onWsEvent(
         
         if (MapOfClients.end() == MapOfClients.find(client->id()))
         {
-            // Serial.println("ESPUIClass::OnWsEvent:Create new client.");
+            // ESPU_DBGL("ESPUIClass::OnWsEvent:Create new client.");
             MapOfClients[client->id()] = new ESPUIclient(client);
         }
 
         if(MapOfClients[client->id()]->onWsEvent(type, arg, data, len))
         {
-            // Serial.println("ESPUIClass::OnWsEvent:notify the clients that they need to be updated.");
+            // ESPU_DBGL("ESPUIClass::OnWsEvent:notify the clients that they need to be updated.");
             NotifyClients(ESPUIclient::UpdateNeeded);
         }
     }
@@ -560,7 +589,7 @@ bool ESPUIClass::removeControl(uint16_t id, bool force_rebuild_ui)
 #ifdef DEBUG_ESPUI
     else
     {
-        // Serial.println(String("Could not Remove Control ") + String(id));
+        // ESPU_DBGL(String("Could not Remove Control ") + String(id));
     }
 #endif // def DEBUG_ESPUI
 
@@ -782,7 +811,7 @@ void ESPUIClass::setEnabled(uint16_t id, bool enabled, int clientId)
     Control* control = getControl(id);
     if (control)
     {
-        // Serial.println(String("CreateAllowed: id: ") + String(clientId) + " State: " + String(enabled));
+        // ESPU_DBGL(String("CreateAllowed: id: ") + String(clientId) + " State: " + String(enabled));
         control->enabled = enabled;
         updateControl(control, clientId);
     }
@@ -806,7 +835,7 @@ void ESPUIClass::updateControl(uint16_t id, int clientId)
 #if defined(DEBUG_ESPUI)
         if (verbosity)
         {
-            Serial.printf_P(PSTR("Error: Update Control: There is no control with ID %d\n"), id);
+            ESPU_DBGf_P(PSTR("Error: Update Control: There is no control with ID %d\n"), id);
         }
 #endif
         return;
@@ -835,7 +864,7 @@ void ESPUIClass::updateControlValue(uint16_t id, const String& value, int client
 #if defined(DEBUG_ESPUI)
         if (verbosity)
         {
-            Serial.printf_P(PSTR("Error: updateControlValue Control: There is no control with ID %d\n"), id);
+            ESPU_DBGf_P(PSTR("Error: updateControlValue Control: There is no control with ID %d\n"), id);
         }
 #endif
         return;
@@ -856,7 +885,7 @@ void ESPUIClass::updateControlLabel(Control* control, const char* value, int cli
 #if defined(DEBUG_ESPUI)
         if (verbosity)
         {
-            Serial.printf_P(PSTR("Error: updateControlLabel Control: There is no control with the requested ID \n"));
+            ESPU_DBGf_P(PSTR("Error: updateControlLabel Control: There is no control with the requested ID \n"));
         }
 #endif
         return;
@@ -1010,7 +1039,7 @@ void ESPUIClass::jsonReload()
 {
     for (auto& CurrentClient : MapOfClients)
     {
-        // Serial.println("Requesting Reload");
+        // ESPU_DBGL("Requesting Reload");
         CurrentClient.second->NotifyClient(ClientUpdateType_t::ReloadNeeded);
     }
 }
@@ -1045,7 +1074,7 @@ void ESPUIClass::beginLITTLEFS(const char* _title, const char* username, const c
 #if defined(DEBUG_ESPUI)
         if (verbosity)
         {
-            Serial.println(F("LITTLEFS Mount Failed, PLEASE CHECK THE README ON HOW TO "
+            ESPU_DBGL(F("LITTLEFS Mount Failed, PLEASE CHECK THE README ON HOW TO "
                              "PREPARE YOUR ESP!!!!!!!"));
         }
 #endif
@@ -1066,7 +1095,7 @@ void ESPUIClass::beginLITTLEFS(const char* _title, const char* username, const c
 #if defined(DEBUG_ESPUI)
         if (verbosity)
         {
-            Serial.println(F("Please read the README!!!!!!!, Make sure to "
+            ESPU_DBGL(F("Please read the README!!!!!!!, Make sure to "
                              "prepareFileSystem() once in an empty sketch"));
         }
 #endif
@@ -1117,7 +1146,7 @@ void ESPUIClass::beginLITTLEFS(const char* _title, const char* username, const c
 #if defined(DEBUG_ESPUI)
     if (verbosity)
     {
-        Serial.println(F("UI Initialized"));
+        ESPU_DBGL(F("UI Initialized"));
     }
 #endif
 }
@@ -1197,17 +1226,18 @@ void ESPUIClass::begin(const char* _title, const char* username, const char* pas
         request->send(response);
     });
 
+#ifndef ESPU_DISABLE_GRAPH
     server->on("/js/graph.js", HTTP_GET, [](AsyncWebServerRequest* request) {
         if (ESPUI.basicAuth && !request->authenticate(ESPUI.basicAuthUsername, ESPUI.basicAuthPassword))
         {
             return request->requestAuthentication();
         }
-
         AsyncWebServerResponse* response
             = request->beginResponse(200, "application/javascript", JS_GRAPH_GZIP, sizeof(JS_GRAPH_GZIP));
         response->addHeader("Content-Encoding", "gzip");
         request->send(response);
     });
+#endif
 
     server->on("/js/tabbedcontent.js", HTTP_GET, [](AsyncWebServerRequest* request) {
         if (ESPUI.basicAuth && !request->authenticate(ESPUI.basicAuthUsername, ESPUI.basicAuthPassword))
@@ -1286,7 +1316,7 @@ void ESPUIClass::begin(const char* _title, const char* username, const char* pas
 #if defined(DEBUG_ESPUI)
     if (verbosity)
     {
-        Serial.println(F("UI Initialized"));
+        ESPU_DBGL(F("UI Initialized"));
     }
 #endif
 }

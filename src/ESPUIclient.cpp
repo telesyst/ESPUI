@@ -2,6 +2,15 @@
 #include "ESPUIclient.h"
 #include "ESPUIcontrol.h"
 
+#if defined(DEBUG) && defined(ESPU_DEBUG)
+    #define ESPU_DBG(arg)        Serial.print(arg)
+	#define ESPU_DBGL(arg)       Serial.println(arg)
+#else
+	#define ESPU_DBG(arg)
+    #define ESPU_DBGL(arg)
+#endif
+
+
 // JSONSlave:
 // helper to process exact JSON serialization size
 // it takes ~2ms on esp8266 and avoid large String reallocation which is really worth the cost
@@ -100,7 +109,7 @@ bool ESPUIclient::SendClientNotification(ClientUpdateType_t value)
     {
         if(!CanSend())
         {
-            // Serial.println(F("ESPUIclient::SendClientNotification:CannotSend"));
+            // ESPU_DBGL(F("ESPUIclient::SendClientNotification:CannotSend"));
             break;
         }
 
@@ -108,13 +117,13 @@ bool ESPUIclient::SendClientNotification(ClientUpdateType_t value)
         FillInHeader(document);
         if(ClientUpdateType_t::ReloadNeeded == value)
         {
-            // Serial.println(F("ESPUIclient::SendClientNotification:set type to reload"));
+            // ESPU_DBGL(F("ESPUIclient::SendClientNotification:set type to reload"));
             document["type"] = int(UI_RELOAD);
         }
         // dont send any controls
 
         Response = SendJsonDocToWebSocket(document);
-        // Serial.println(String("ESPUIclient::SendClientNotification:NotificationSent:Response: ") + String(Response));
+        // ESPU_DBGL(String("ESPUIclient::SendClientNotification:NotificationSent:Response: ") + String(Response));
 
     } while (false);
     return Response;
@@ -130,7 +139,7 @@ void ESPUIclient::NotifyClient(ClientUpdateType_t newState)
 bool ESPUIclient::onWsEvent(AwsEventType type, void* arg, uint8_t* data, size_t len)
 {
     bool Response = false;
-    // Serial.println(String("ESPUIclient::OnWsEvent: type: ") + String(type));
+    // ESPU_DBGL(String("ESPUIclient::OnWsEvent: type: ") + String(type));
 
     switch (type)
     {
@@ -139,7 +148,7 @@ bool ESPUIclient::onWsEvent(AwsEventType type, void* arg, uint8_t* data, size_t 
             #if defined(DEBUG_ESPUI)
             if (ESPUI.verbosity)
             {
-                Serial.println(F("ESPUIclient::OnWsEvent:WS_EVT_PONG"));
+                ESPU_DBGL(F("ESPUIclient::OnWsEvent:WS_EVT_PONG"));
             }
             #endif
             break;
@@ -150,7 +159,7 @@ bool ESPUIclient::onWsEvent(AwsEventType type, void* arg, uint8_t* data, size_t 
             #if defined(DEBUG_ESPUI)
             if (ESPUI.verbosity)
             {
-                Serial.println(F("ESPUIclient::OnWsEvent:WS_EVT_ERROR"));
+                ESPU_DBGL(F("ESPUIclient::OnWsEvent:WS_EVT_ERROR"));
             }
             #endif
             break;
@@ -161,19 +170,19 @@ bool ESPUIclient::onWsEvent(AwsEventType type, void* arg, uint8_t* data, size_t 
     		#if defined(DEBUG_ESPUI)
             if (ESPUI.verbosity)
             {
-                Serial.println(F("ESPUIclient::OnWsEvent:WS_EVT_CONNECT"));
-                Serial.println(client->id());
+                ESPU_DBGL(F("ESPUIclient::OnWsEvent:WS_EVT_CONNECT"));
+                ESPU_DBGL(client->id());
             }
     		#endif
 
-            // Serial.println("ESPUIclient:onWsEvent:WS_EVT_CONNECT: Call NotifyClient: RebuildNeeded");
+            // ESPU_DBGL("ESPUIclient:onWsEvent:WS_EVT_CONNECT: Call NotifyClient: RebuildNeeded");
             NotifyClient(ClientUpdateType_t::RebuildNeeded);
             break;
         }
 
         case WS_EVT_DATA:
         {
-            // Serial.println(F("ESPUIclient::OnWsEvent:WS_EVT_DATA"));
+            // ESPU_DBGL(F("ESPUIclient::OnWsEvent:WS_EVT_DATA"));
             String msg = "";
             msg.reserve(len + 1);
 
@@ -189,50 +198,50 @@ bool ESPUIclient::onWsEvent(AwsEventType type, void* arg, uint8_t* data, size_t 
             #if defined(DEBUG_ESPUI)
                 if (ESPUI.verbosity >= Verbosity::VerboseJSON)
                 {
-                    Serial.println(String(F("  WS msg: ")) + msg);
-                    Serial.println(String(F("  WS cmd: ")) + cmd);
-                    Serial.println(String(F("   WS id: ")) + String(id));
-                    Serial.println(String(F("WS value: ")) + String(value));
+                    ESPU_DBGL(String(F("  WS msg: ")) + msg);
+                    ESPU_DBGL(String(F("  WS cmd: ")) + cmd);
+                    ESPU_DBGL(String(F("   WS id: ")) + String(id));
+                    ESPU_DBGL(String(F("WS value: ")) + String(value));
                 }
             #endif
 
             if (cmd.equals(F("uiok")))
             {
                 
-                // Serial.println(String(F("ESPUIclient::OnWsEvent:WS_EVT_DATA:uiok:ProcessAck:")) + pCurrentFsmState->GetStateName());
+                // ESPU_DBGL(String(F("ESPUIclient::OnWsEvent:WS_EVT_DATA:uiok:ProcessAck:")) + pCurrentFsmState->GetStateName());
                 pCurrentFsmState->ProcessAck(id, emptyString);
                 break;
             }
 
             if (cmd.equals(F("uifragmentok")))
             {
-                // Serial.println(String(F("ESPUIclient::OnWsEvent:WS_EVT_DATA:uiok:uifragmentok:")) + pCurrentFsmState->GetStateName() + ":ProcessAck");
+                // ESPU_DBGL(String(F("ESPUIclient::OnWsEvent:WS_EVT_DATA:uiok:uifragmentok:")) + pCurrentFsmState->GetStateName() + ":ProcessAck");
                 if(!emptyString.equals(value))
                 {
-                    // Serial.println(String(F("ESPUIclient::OnWsEvent:WS_EVT_DATA:uiok:uifragmentok:")) + pCurrentFsmState->GetStateName() + ":ProcessAck:value:'" +  value + "'");
+                    // ESPU_DBGL(String(F("ESPUIclient::OnWsEvent:WS_EVT_DATA:uiok:uifragmentok:")) + pCurrentFsmState->GetStateName() + ":ProcessAck:value:'" +  value + "'");
                     pCurrentFsmState->ProcessAck(uint16_t(-1), value);
                 }
                 else
                 {
-                    Serial.println(F("ERROR:ESPUIclient::OnWsEvent:WS_EVT_DATA:uifragmentok:ProcessAck:Fragment Header is missing"));
+                    ESPU_DBGL(F("ERROR:ESPUIclient::OnWsEvent:WS_EVT_DATA:uifragmentok:ProcessAck:Fragment Header is missing"));
                 }
                 break;
             }
 
             if (cmd.equals(F("uiuok")))
             {
-                // Serial.println(F("WS_EVT_DATA: uiuok. Unlock new async notifications"));
+                // ESPU_DBGL(F("WS_EVT_DATA: uiuok. Unlock new async notifications"));
                 break;
             }
 
-            // Serial.println(F("WS_EVT_DATA:Process Control"));
+            // ESPU_DBGL(F("WS_EVT_DATA:Process Control"));
             Control* control = ESPUI.getControl(id);
             if (nullptr == control)
             {
                 #if defined(DEBUG_ESPUI)
                 if (ESPUI.verbosity)
                 {
-                    Serial.println(String(F("No control found for ID ")) + String(id));
+                    ESPU_DBGL(String(F("No control found for ID ")) + String(id));
                 }
                 #endif
                 break;
@@ -245,7 +254,7 @@ bool ESPUIclient::onWsEvent(AwsEventType type, void* arg, uint8_t* data, size_t 
 
         default:
         {
-            // Serial.println(F("ESPUIclient::OnWsEvent:default"));
+            // ESPU_DBGL(F("ESPUIclient::OnWsEvent:default"));
             break;
         }
     } // end switch
@@ -267,9 +276,10 @@ uint32_t ESPUIclient::prepareJSONChunk(uint16_t startindex,
     xSemaphoreTake(ESPUI.ControlsSemaphore, portMAX_DELAY);
 #endif // def ESP32
 
-    // Serial.println(String("prepareJSONChunk: Start.          InUpdateMode: ") + String(InUpdateMode));
-    // Serial.println(String("prepareJSONChunk: Start.            startindex: ") + String(startindex));
-    // Serial.println(String("prepareJSONChunk: Start. FragmentRequestString: '") + FragmentRequestString + "'");
+    // ESPU_DBGL(String("prepareJSONChunk: Start.          InUpdateMode: ") + String(InUpdateMode));
+    // ESPU_DBGL(String("prepareJSONChunk: Start.            startindex: ") + String(startindex));
+    // ESPU_DBGL(String("prepareJSONChunk: Start. FragmentRequestString: '") + FragmentRequestString + "'");
+
     int elementcount = 0;
     uint32_t MaxMarshaledJsonSize = (!InUpdateMode) ? ESPUI.jsonInitialDocumentSize: ESPUI.jsonUpdateDocumentSize;
     uint32_t EstimatedUsedMarshaledJsonSize = 0;
@@ -285,10 +295,10 @@ uint32_t ESPUIclient::prepareJSONChunk(uint16_t startindex,
 
         if(!emptyString.equals(FragmentRequestString))
         {
-            // Serial.println(F("prepareJSONChunk:Fragmentation:Got Header (1)"));
-            // Serial.println(String("prepareJSONChunk:startindex:                  ") + String(startindex));
-            // Serial.println(String("prepareJSONChunk:currentIndex:                ") + String(currentIndex));
-            // Serial.println(String("prepareJSONChunk:FragmentRequestString:      '") + FragmentRequestString + "'");
+            // ESPU_DBGL(F("prepareJSONChunk:Fragmentation:Got Header (1)"));
+            // ESPU_DBGL(String("prepareJSONChunk:startindex:                  ") + String(startindex));
+            // ESPU_DBGL(String("prepareJSONChunk:currentIndex:                ") + String(currentIndex));
+            // ESPU_DBGL(String("prepareJSONChunk:FragmentRequestString:      '") + FragmentRequestString + "'");
 
             // this is actually a fragment or directed update request
             // parse the string we got from the UI and try to update that specific 
@@ -298,7 +308,7 @@ uint32_t ESPUIclient::prepareJSONChunk(uint16_t startindex,
             ArduinoJson::detail::sizeofObject(N);
             if(0 >= FragmentRequest.capacity())
             {
-                Serial.println(F("ERROR:prepareJSONChunk:Fragmentation:Could not allocate memory for a fragmentation request. Skipping Response"));
+                ESPU_DBGL(F("ERROR:prepareJSONChunk:Fragmentation:Could not allocate memory for a fragmentation request. Skipping Response"));
                 break;
             }
 */
@@ -306,31 +316,31 @@ uint32_t ESPUIclient::prepareJSONChunk(uint16_t startindex,
             DeserializationError error = deserializeJson(FragmentRequest, FragmentRequestString.substring(FragmentRequestStartOffset));
             if(DeserializationError::Ok != error)
             {
-                Serial.println(F("ERROR:prepareJSONChunk:Fragmentation:Could not extract json from the fragment request"));
+                ESPU_DBGL(F("ERROR:prepareJSONChunk:Fragmentation:Could not extract json from the fragment request"));
                 break;
             }
 
             if(!FragmentRequest.containsKey(F("id")))
             {
-                Serial.println(F("ERROR:prepareJSONChunk:Fragmentation:Request does not contain a control ID"));
+                ESPU_DBGL(F("ERROR:prepareJSONChunk:Fragmentation:Request does not contain a control ID"));
                 break;
             }
             uint16_t ControlId = uint16_t(FragmentRequest[F("id")]);
 
             if(!FragmentRequest.containsKey(F("offset")))
             {
-                Serial.println(F("ERROR:prepareJSONChunk:Fragmentation:Request does not contain a starting offset"));
+                ESPU_DBGL(F("ERROR:prepareJSONChunk:Fragmentation:Request does not contain a starting offset"));
                 break;
             }
             DataOffset = uint16_t(FragmentRequest[F("offset")]);
             control = ESPUI.getControlNoLock(ControlId);
             if(nullptr == control)
             {
-                Serial.println(String(F("ERROR:prepareJSONChunk:Fragmentation:Requested control: ")) + String(ControlId) + F(" does not exist"));
+                ESPU_DBGL(String(F("ERROR:prepareJSONChunk:Fragmentation:Requested control: ")) + String(ControlId) + F(" does not exist"));
                 break;
             }
 
-            // Serial.println(F("prepareJSONChunk:Fragmentation:disable the control search operation"));
+            // ESPU_DBGL(F("prepareJSONChunk:Fragmentation:disable the control search operation"));
             currentIndex = 1;
             startindex = 0;
             SingleControl = true;
@@ -362,7 +372,7 @@ uint32_t ESPUIclient::prepareJSONChunk(uint16_t startindex,
         // any controls left to be processed?
         if(nullptr == control)
         {
-            // Serial.println("prepareJSONChunk: No controls to process");
+            // ESPU_DBGL("prepareJSONChunk: No controls to process");
             break;
         }
 
@@ -374,7 +384,7 @@ uint32_t ESPUIclient::prepareJSONChunk(uint16_t startindex,
             // skip deleted controls or controls that have not been updated
             if (control->ToBeDeleted() && !SingleControl)
             {
-                // Serial.println(String("prepareJSONChunk: Ignoring Deleted control: ") + String(control->id));
+                // ESPU_DBGL(String("prepareJSONChunk: Ignoring Deleted control: ") + String(control->id));
                 control = control->next;
                 continue;
             }
@@ -393,33 +403,33 @@ uint32_t ESPUIclient::prepareJSONChunk(uint16_t startindex,
                 }
             }
 
-            // Serial.println(String(F("prepareJSONChunk: MaxMarshaledJsonSize: ")) + String(MaxMarshaledJsonSize));
-            // Serial.println(String(F("prepareJSONChunk: Cur EstimatedUsedMarshaledJsonSize: ")) + String(EstimatedUsedMarshaledJsonSize));
+            // ESPU_DBGL(String(F("prepareJSONChunk: MaxMarshaledJsonSize: ")) + String(MaxMarshaledJsonSize));
+            // ESPU_DBGL(String(F("prepareJSONChunk: Cur EstimatedUsedMarshaledJsonSize: ")) + String(EstimatedUsedMarshaledJsonSize));
 
             JsonObject item = AllocateJsonObject(items);
             elementcount++;
             uint32_t RemainingSpace = (MaxMarshaledJsonSize - EstimatedUsedMarshaledJsonSize) - 100;
-            // Serial.println(String(F("prepareJSONChunk: RemainingSpace: ")) + String(RemainingSpace));
+            // ESPU_DBGL(String(F("prepareJSONChunk: RemainingSpace: ")) + String(RemainingSpace));
             uint32_t SpaceUsedByMarshaledControl = 0;
             bool ControlIsFragmented = control->MarshalControl(item, 
                                                                InUpdateMode, 
                                                                DataOffset, 
                                                                RemainingSpace,
                                                                SpaceUsedByMarshaledControl);
-            // Serial.println(String(F("prepareJSONChunk: SpaceUsedByMarshaledControl: ")) + String(SpaceUsedByMarshaledControl));
+            // ESPU_DBGL(String(F("prepareJSONChunk: SpaceUsedByMarshaledControl: ")) + String(SpaceUsedByMarshaledControl));
             EstimatedUsedMarshaledJsonSize += SpaceUsedByMarshaledControl;
-            // Serial.println(String(F("prepareJSONChunk: New EstimatedUsedMarshaledJsonSize: ")) + String(EstimatedUsedMarshaledJsonSize));
-            // Serial.println(String(F("prepareJSONChunk:                ControlIsFragmented: ")) + String(ControlIsFragmented));
+            // ESPU_DBGL(String(F("prepareJSONChunk: New EstimatedUsedMarshaledJsonSize: ")) + String(EstimatedUsedMarshaledJsonSize));
+            // ESPU_DBGL(String(F("prepareJSONChunk:                ControlIsFragmented: ")) + String(ControlIsFragmented));
 
             // did the control get added to the doc?
             if (0 == SpaceUsedByMarshaledControl || 
                 (ESPUI.jsonChunkNumberMax > 0 && (elementcount % ESPUI.jsonChunkNumberMax) == 0))
             {
-                // Serial.println( String("prepareJSONChunk: too much data in the message. Remove the last entry"));
+                // ESPU_DBGL( String("prepareJSONChunk: too much data in the message. Remove the last entry"));
                 if (1 == elementcount)
                 {
-                    // Serial.println(String(F("prepareJSONChunk: Control ")) + String(control->id) + F(" is too large to be sent to the browser."));
-                    // Serial.println(String(F("ERROR: prepareJSONChunk: value: ")) + control->value);
+                    // ESPU_DBGL(String(F("prepareJSONChunk: Control ")) + String(control->id) + F(" is too large to be sent to the browser."));
+                    // ESPU_DBGL(String(F("ERROR: prepareJSONChunk: value: ")) + control->value);
                     rootDoc.clear();
                     item = AllocateJsonObject(items);
                     control->MarshalErrorMessage(item);
@@ -427,8 +437,8 @@ uint32_t ESPUIclient::prepareJSONChunk(uint16_t startindex,
                 }
                 else
                 {
-                    // Serial.println(String("prepareJSONChunk: Defering control: ") + String(control->id));
-                    // Serial.println(String("prepareJSONChunk: elementcount: ") + String(elementcount));
+                    // ESPU_DBGL(String("prepareJSONChunk: Defering control: ") + String(control->id));
+                    // ESPU_DBGL(String("prepareJSONChunk: elementcount: ") + String(elementcount));
 
                     items.remove(elementcount);
                     --elementcount;
@@ -440,12 +450,13 @@ uint32_t ESPUIclient::prepareJSONChunk(uint16_t startindex,
                      (ControlIsFragmented) ||
                      (MaxMarshaledJsonSize < (EstimatedUsedMarshaledJsonSize + 100)))
             {
-                // Serial.println("prepareJSONChunk: Doc is Full, Fragmented Control or Single Control. exit loop");
+
+                // ESPU_DBGL("prepareJSONChunk: Doc is Full, Fragmented Control or Single Control. exit loop");
                 control = nullptr;
             }
             else
             {
-                // Serial.println("prepareJSONChunk: Next Control");
+                // ESPU_DBGL("prepareJSONChunk: Next Control");
                 control = control->next;
             }
         } // end while (control != nullptr)
@@ -456,7 +467,7 @@ uint32_t ESPUIclient::prepareJSONChunk(uint16_t startindex,
     xSemaphoreGive(ESPUI.ControlsSemaphore);
 #endif // def ESP32
 
-    // Serial.println(String("prepareJSONChunk: END: elementcount: ") + String(elementcount));
+    // ESPU_DBGL(String("prepareJSONChunk: END: elementcount: ") + String(elementcount));
     return elementcount;
 }
 
@@ -483,18 +494,18 @@ etc.
 bool ESPUIclient::SendControlsToClient(uint16_t startidx, ClientUpdateType_t TransferMode, String FragmentRequest)
 {
     bool Response = false;
-    // Serial.println(String("ESPUIclient:SendControlsToClient:startidx: ") + String(startidx));
+    // ESPU_DBGL(String("ESPUIclient:SendControlsToClient:startidx: ") + String(startidx));
     do // once
     {
         if(!CanSend())
         {
-            // Serial.println("ESPUIclient:SendControlsToClient: Cannot Send to clients.");
+            // ESPU_DBGL("ESPUIclient:SendControlsToClient: Cannot Send to clients.");
             break;
         }
 
         else if ((startidx >= ESPUI.controlCount) && (emptyString.equals(FragmentRequest)))
         {
-            // Serial.println(F("ERROR:ESPUIclient:SendControlsToClient: No more controls to send."));
+            // ESPU_DBGL(F("ERROR:ESPUIclient:SendControlsToClient: No more controls to send."));
             Response = true;
             break;
         }
@@ -506,44 +517,44 @@ bool ESPUIclient::SendControlsToClient(uint16_t startidx, ClientUpdateType_t Tra
 
         if(0 == startidx)
         {
-            // Serial.println("ESPUIclient:SendControlsToClient: Tell client we are starting a transfer of controls.");
+            // ESPU_DBGL("ESPUIclient:SendControlsToClient: Tell client we are starting a transfer of controls.");
             document["type"] = (ClientUpdateType_t::RebuildNeeded == TransferMode) ? UI_INITIAL_GUI : UI_EXTEND_GUI;
             CurrentSyncID = NextSyncID;
             NextSyncID = ESPUI.GetNextControlChangeId();
         }
-        // Serial.println(String("ESPUIclient:SendControlsToClient:type: ") + String((uint32_t)document["type"]));
+        // ESPU_DBGL(String("ESPUIclient:SendControlsToClient:type: ") + String((uint32_t)document["type"]));
 
-        // Serial.println("ESPUIclient:SendControlsToClient: Build Controls.");
+        // ESPU_DBGL("ESPUIclient:SendControlsToClient: Build Controls.");
         if(prepareJSONChunk(startidx, document, ClientUpdateType_t::UpdateNeeded == TransferMode, FragmentRequest))
         {
             #if defined(DEBUG_ESPUI)
                 if (ESPUI.verbosity >= Verbosity::VerboseJSON)
                 {
-                    Serial.println(F("ESPUIclient:SendControlsToClient: Sending elements --------->"));
+                    ESPU_DBGL(F("ESPUIclient:SendControlsToClient: Sending elements --------->"));
                     serializeJson(document, Serial);
-                    Serial.println();
+                    ESPU_DBGL();
                 }
             #endif
 
-            // Serial.println("ESPUIclient:SendControlsToClient: Send message.");
+            // ESPU_DBGL("ESPUIclient:SendControlsToClient: Send message.");
             if(true == SendJsonDocToWebSocket(document))
             {
-                // Serial.println("ESPUIclient:SendControlsToClient: Sent.");
+                // ESPU_DBGL("ESPUIclient:SendControlsToClient: Sent.");
             }
             else
             {
-                // Serial.println("ESPUIclient:SendControlsToClient: Send failed.");
+                // ESPU_DBGL("ESPUIclient:SendControlsToClient: Send failed.");
             }
         }
         else
         {
-            // Serial.println("ESPUIclient:SendControlsToClient: No elements to send.");
+            // ESPU_DBGL("ESPUIclient:SendControlsToClient: No elements to send.");
             Response = true;
         }
 
     } while(false);
 
-    // Serial.println(String("ESPUIclient:SendControlsToClient:Response: ") + String(Response));
+    // ESPU_DBGL(String("ESPUIclient:SendControlsToClient:Response: ") + String(Response));
     return Response;
 }
 
@@ -558,10 +569,10 @@ bool ESPUIclient::SendJsonDocToWebSocket(JsonDocument& document)
             #if defined(DEBUG_ESPUI)
                 if (ESPUI.verbosity >= Verbosity::VerboseJSON)
                 {
-                    Serial.println(F("ESPUIclient::SendJsonDocToWebSocket: Cannot Send to client. Not sending websocket message"));
+                    ESPU_DBGL(F("ESPUIclient::SendJsonDocToWebSocket: Cannot Send to client. Not sending websocket message"));
                 }
             #endif
-            // Serial.println("ESPUIclient::SendJsonDocToWebSocket: Cannot Send to client. Not sending websocket message");
+            // ESPU_DBGL("ESPUIclient::SendJsonDocToWebSocket: Cannot Send to client. Not sending websocket message");
             Response = false;
             break;
         }
@@ -571,17 +582,17 @@ bool ESPUIclient::SendJsonDocToWebSocket(JsonDocument& document)
         #if defined(DEBUG_ESPUI)
             if (ESPUI.verbosity >= Verbosity::VerboseJSON)
             {
-                Serial.println(String(F("ESPUIclient::SendJsonDocToWebSocket: json: '")) + json + "'");
+                ESPU_DBGL(String(F("ESPUIclient::SendJsonDocToWebSocket: json: '")) + json + "'");
             }
         #endif
 
         #if defined(DEBUG_ESPUI)
             if (ESPUI.verbosity >= Verbosity::VerboseJSON)
             {
-                Serial.println(F("ESPUIclient::SendJsonDocToWebSocket: client.text"));
+                ESPU_DBGL(F("ESPUIclient::SendJsonDocToWebSocket: client.text"));
             }
         #endif
-        // Serial.println(F("ESPUIclient::SendJsonDocToWebSocket: client.text"));
+        // ESPU_DBGL(F("ESPUIclient::SendJsonDocToWebSocket: client.text"));
         client->text(json);
 
     } while (false);
