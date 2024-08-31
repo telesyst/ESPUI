@@ -5,33 +5,45 @@ static const String ControlError = "*** ESPUI ERROR: Could not transfer control 
 
 Control::Control(ControlType type, const char* label, std::function<void(Control*, int)> callback, const String& value,
     ControlColor color, bool visible, uint16_t parentControl)
-    : type(type),
-      label(label),
+    : label_r(label),
       callback(callback),
       value(value),
       color(color),
-      visible(visible),
-      wide(false),
-      vertical(false),
-      enabled(true),
-      auto_update_value(false),
-      parentControl(parentControl),
-      next(nullptr)
+      next(nullptr),
+      type(type),
+      options(visible ? CTRL_OPT_VISIBLE:0),
+      parentControl(parentControl), 
+      ControlChangeID(1)
 {
     id = ++idCounter;
-    ControlChangeID = 1;
+}
+
+Control::Control(ControlType type, const __FlashStringHelper* label, std::function<void(Control*, int)> callback,
+    const String& value, ControlColor color, bool visible, uint16_t parentControl)
+    : label_f(label),
+      callback(callback),
+      value(value),
+      color(color),
+      next(nullptr),
+      type(type),
+      options(CTRL_OPT_ENABLED | CTRL_OPT_LABEL_IN_FLASH),
+      parentControl(parentControl),
+      ControlChangeID(1)
+{
+    this->visible = visible;
+    id = ++idCounter;
 }
 
 Control::Control(const Control& Control)
-    : type(Control.type),
-        id(Control.id),
-        label(Control.label),
+    :   label_r(Control.label_r),
         callback(Control.callback),
         value(Control.value),
         color(Control.color),
-        visible(Control.visible),
-        parentControl(Control.parentControl),
         next(Control.next),
+        type(Control.type),
+        options(Control.options),
+        id(Control.id),
+        parentControl(Control.parentControl),
         ControlChangeID(Control.ControlChangeID)
 { }
 
@@ -66,7 +78,9 @@ bool Control::MarshalControl(JsonObject & _item,
 
     // how much space do we expect to use?
     uint32_t ValueMarshaledLength   = (value.length() - StartingOffset) * JsonMarshalingRatio;
-    uint32_t LabelMarshaledLength   = strlen(label) * JsonMarshalingRatio;
+    
+    uint32_t LabelMarshaledLength   = (lablel_is_in_flash ? strlen(label_r) : String(label_f).length()) * JsonMarshalingRatio;
+    
     uint32_t MinimumMarshaledLength = LabelMarshaledLength + JsonMarshaledOverhead;
     uint32_t MaximumMarshaledLength = ValueMarshaledLength + MinimumMarshaledLength;
     uint32_t SpaceForMarshaledValue = AvailMarshaledLength - MinimumMarshaledLength;
@@ -148,7 +162,11 @@ bool Control::MarshalControl(JsonObject & _item,
         item[F("type")] = uint32_t(TempType);
     }
 
-    item[F("label")]   = label;
+    if (lablel_is_in_flash)
+        item[F("label")] = String(label_f);
+    else
+        item[F("label")] = label_r;
+    
     item[F ("value")]  = (ControlType::Password == type) ? F ("--------") : value.substring(StartingOffset, StartingOffset + ValueLenToSend);
     item[F("visible")] = visible;
     item[F("color")]   = (int)color;

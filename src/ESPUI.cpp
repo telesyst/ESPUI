@@ -890,7 +890,8 @@ void ESPUIClass::updateControlLabel(Control* control, const char* value, int cli
 #endif
         return;
     }
-    control->label = value;
+    control->label_r = value;
+    control->lablel_is_in_flash = false;
     updateControl(control, clientId);
 }
 
